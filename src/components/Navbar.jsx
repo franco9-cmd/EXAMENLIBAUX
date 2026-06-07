@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 function Navbar() {
+  const navigate = useNavigate();
   return (
     <>
       <header className="w-100 sticky-top z-3 bg-white border-bottom shadow-sm">
@@ -33,7 +34,12 @@ function Navbar() {
           </nav>
 
           <div className="d-flex align-items-center gap-2">
-            <button className="btn btn-light rounded-circle d-flex align-items-center justify-content-center border-0" style={{width: '40px', height: '40px'}}>
+            <button
+              onClick={() => navigate('/coleccion')}
+              className="btn btn-light rounded-circle d-flex align-items-center justify-content-center border-0"
+              style={{width: '40px', height: '40px'}}
+              title="Ir a Mi Colección"
+            >
               <i className="fa-solid fa-magnifying-glass text-muted"></i>
             </button>
             <button className="btn btn-light rounded-circle d-flex align-items-center justify-content-center border-0 d-none d-md-flex" style={{width: '40px', height: '40px'}}>
@@ -67,6 +73,14 @@ function Navbar() {
         >
           <i className="fa-solid fa-layer-group fs-5 mb-1"></i>
           <span style={{fontSize: '10px'}} className="fw-bold">Categorías</span>
+        </NavLink>
+
+        <NavLink
+          to="/coleccion"
+          className={({isActive}) => `d-flex flex-column align-items-center justify-content-center text-decoration-none rounded-3 py-1 px-3 ${isActive ? 'text-primary-hw' : 'text-muted'}`}
+        >
+          <i className="fa-solid fa-magnifying-glass fs-5 mb-1"></i>
+          <span style={{fontSize: '10px'}} className="fw-bold">Buscar</span>
         </NavLink>
 
         <a href="#" className="d-flex flex-column align-items-center justify-content-center text-muted text-decoration-none py-1 px-3">

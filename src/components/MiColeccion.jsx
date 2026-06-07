@@ -1,8 +1,22 @@
 import { useState } from 'react';
 
-function MiColeccion({ vehicles, onToggleObtenido, onToggleFavorito }) {
+const CATEGORIAS = ['Deportivos', 'Muscle Cars', 'Clásicos', 'Todoterreno', 'Competición'];
+
+const formularioVacio = {
+  nombre: '',
+  categoria: 'Deportivos',
+  anio: new Date().getFullYear(),
+  imagen: '',
+  obtenido: true,
+  favorito: false,
+};
+
+function MiColeccion({ vehicles, onToggleObtenido, onToggleFavorito, onAgregarVehiculo }) {
   const [search, setSearch] = useState('');
   const [filtro, setFiltro] = useState('Todos');
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [formulario, setFormulario] = useState(formularioVacio);
+  const [error, setError] = useState('');
 
   const vehiculosFiltrados = vehicles
     .filter(v => v.nombre.toLowerCase().includes(search.toLowerCase()))
@@ -13,24 +27,75 @@ function MiColeccion({ vehicles, onToggleObtenido, onToggleFavorito }) {
       return true;
     });
 
+  function handleCambioFormulario(e) {
+    const { name, value, type, checked } = e.target;
+    setFormulario(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  }
+
+  function handleImagenChange(e) {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = (evento) => {
+      setFormulario(prev => ({ ...prev, imagen: evento.target.result }));
+    };
+    lector.readAsDataURL(archivo);
+  }
+
+  function handleGuardar(e) {
+    e.preventDefault();
+    if (!formulario.nombre.trim()) {
+      setError('El nombre del vehículo es obligatorio.');
+      return;
+    }
+    onAgregarVehiculo({
+      ...formulario,
+      anio: parseInt(formulario.anio),
+      imagen: formulario.imagen || '/images/descarga (12).jpg',
+    });
+    setFormulario(formularioVacio);
+    setError('');
+    setMostrarModal(false);
+  }
+
+  function handleCerrar() {
+    setFormulario(formularioVacio);
+    setError('');
+    setMostrarModal(false);
+  }
+
   return (
     <div className="py-4">
 
-      <div className="d-flex flex-column gap-2 mb-4">
-        <h2 className="fw-bold mb-0">Mi Colección</h2>
-        <div style={{height: '4px', width: '60px', backgroundColor: 'var(--primary-color)', borderRadius: '2px'}}></div>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <h2 className="fw-bold mb-0">Mi Colección</h2>
+          <div style={{height: '4px', width: '60px', backgroundColor: 'var(--primary-color)', borderRadius: '2px', marginTop: '6px'}}></div>
+        </div>
+        <button
+          className="btn bg-primary-hw fw-bold px-4 py-2 rounded-3 d-flex align-items-center gap-2"
+          onClick={() => setMostrarModal(true)}
+        >
+          <i className="fa-solid fa-plus"></i>
+          Añadir Auto
+        </button>
       </div>
 
-      <div className="bg-white p-4 rounded-4 shadow-sm border mb-4" style={{borderColor: '#e5e7eb'}}>
+      <div className="bg-white p-4 rounded-4 shadow-sm border mb-4 mt-4" style={{borderColor: '#e5e7eb'}}>
         <div className="row g-3">
           <div className="col-12 col-md-6">
-            <div className="input-group">
-              <span className="input-group-text bg-light border-end-0">
-                <i className="fa-solid fa-magnifying-glass text-muted"></i>
-              </span>
+            <div className="position-relative">
+              <i
+                className="fa-solid fa-magnifying-glass text-muted position-absolute"
+                style={{top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none'}}
+              ></i>
               <input
                 type="text"
-                className="form-control bg-light border-start-0 ps-0"
+                className="form-control rounded-3 ps-5"
+                style={{backgroundColor: '#f8f9fa', border: '1px solid #e5e7eb'}}
                 placeholder="Buscar por nombre..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -148,6 +213,156 @@ function MiColeccion({ vehicles, onToggleObtenido, onToggleFavorito }) {
       )}
 
       <div className="d-md-none" style={{height: '30px'}}></div>
+
+      {mostrarModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000}}
+          onClick={handleCerrar}
+        >
+          <div
+            className="bg-white rounded-4 shadow-lg p-4 p-md-5 w-100"
+            style={{maxWidth: '520px', margin: '1rem'}}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h4 className="fw-bold mb-0">
+                  <i className="fa-solid fa-plus-circle me-2 text-primary-hw"></i>
+                  Nuevo Hot Wheels
+                </h4>
+                <p className="text-muted small mb-0 mt-1">Añade un auto a tu colección</p>
+              </div>
+              <button className="btn btn-light rounded-circle border-0" onClick={handleCerrar} style={{width: '36px', height: '36px'}}>
+                <i className="fa-solid fa-xmark text-muted"></i>
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardar}>
+              <div className="mb-3">
+                <label className="form-label fw-bold small text-uppercase text-muted" style={{letterSpacing: '1px'}}>
+                  Nombre del vehículo *
+                </label>
+                <input
+                  type="text"
+                  name="nombre"
+                  className="form-control rounded-3"
+                  placeholder="Ej: Bone Shaker"
+                  value={formulario.nombre}
+                  onChange={handleCambioFormulario}
+                />
+              </div>
+
+              <div className="row g-3 mb-3">
+                <div className="col-7">
+                  <label className="form-label fw-bold small text-uppercase text-muted" style={{letterSpacing: '1px'}}>
+                    Categoría
+                  </label>
+                  <select
+                    name="categoria"
+                    className="form-select rounded-3"
+                    value={formulario.categoria}
+                    onChange={handleCambioFormulario}
+                  >
+                    {CATEGORIAS.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-5">
+                  <label className="form-label fw-bold small text-uppercase text-muted" style={{letterSpacing: '1px'}}>
+                    Año
+                  </label>
+                  <input
+                    type="number"
+                    name="anio"
+                    className="form-control rounded-3"
+                    min="1968"
+                    max="2030"
+                    value={formulario.anio}
+                    onChange={handleCambioFormulario}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold small text-uppercase text-muted" style={{letterSpacing: '1px'}}>
+                  Imagen del vehículo <span className="text-muted fw-normal">(opcional)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control rounded-3"
+                  onChange={handleImagenChange}
+                />
+                {formulario.imagen && (
+                  <div className="mt-2 rounded-3 overflow-hidden" style={{height: '100px'}}>
+                    <img
+                      src={formulario.imagen}
+                      alt="Vista previa"
+                      className="w-100 h-100 object-fit-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="d-flex gap-4 mb-4">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    name="obtenido"
+                    id="checkObtenido"
+                    className="form-check-input"
+                    checked={formulario.obtenido}
+                    onChange={handleCambioFormulario}
+                    style={{accentColor: 'var(--primary-color)'}}
+                  />
+                  <label className="form-check-label fw-bold" htmlFor="checkObtenido">
+                    Ya lo tengo
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    name="favorito"
+                    id="checkFavorito"
+                    className="form-check-input"
+                    checked={formulario.favorito}
+                    onChange={handleCambioFormulario}
+                    style={{accentColor: '#f59e0b'}}
+                  />
+                  <label className="form-check-label fw-bold" htmlFor="checkFavorito">
+                    Favorito
+                  </label>
+                </div>
+              </div>
+
+              {error && (
+                <div className="alert alert-danger rounded-3 py-2 px-3 small mb-3">
+                  <i className="fa-solid fa-circle-exclamation me-2"></i>{error}
+                </div>
+              )}
+
+              <div className="d-flex gap-3">
+                <button
+                  type="button"
+                  className="btn btn-light fw-bold flex-grow-1 rounded-3 py-2"
+                  onClick={handleCerrar}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn bg-primary-hw fw-bold flex-grow-1 rounded-3 py-2"
+                >
+                  <i className="fa-solid fa-plus me-2"></i>
+                  Guardar Auto
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

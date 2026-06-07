@@ -10,7 +10,15 @@ import Categorias from './components/Categorias';
 
 function App() {
   const [showApp, setShowApp] = useState(false);
-  const [vehicles, setVehicles] = useState(hotwheelsList);
+
+  const [vehicles, setVehicles] = useState(() => {
+    try {
+      const guardados = localStorage.getItem('misHotWheels');
+      return guardados ? JSON.parse(guardados) : hotwheelsList;
+    } catch {
+      return hotwheelsList;
+    }
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -18,6 +26,10 @@ function App() {
     }, 500);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('misHotWheels', JSON.stringify(vehicles));
+  }, [vehicles]);
 
   function handleToggleObtenido(id) {
     setVehicles(
@@ -29,6 +41,11 @@ function App() {
     setVehicles(
       vehicles.map(v => v.id === id ? { ...v, favorito: !v.favorito } : v)
     );
+  }
+
+  function handleAgregarVehiculo(nuevoVehiculo) {
+    const nuevoId = vehicles.length > 0 ? Math.max(...vehicles.map(v => v.id)) + 1 : 1;
+    setVehicles([...vehicles, { ...nuevoVehiculo, id: nuevoId }]);
   }
 
   if (!showApp) {
@@ -51,6 +68,7 @@ function App() {
                 vehicles={vehicles}
                 onToggleObtenido={handleToggleObtenido}
                 onToggleFavorito={handleToggleFavorito}
+                onAgregarVehiculo={handleAgregarVehiculo}
               />
             }
           />
